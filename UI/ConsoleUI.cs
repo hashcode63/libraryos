@@ -1,14 +1,11 @@
 namespace LibraryOS.UI
 {
     /// <summary>
-    /// Helper class for styled console output
+    /// Helper class for styled console output — FIX: improved GetIntInput with overflow message
     /// </summary>
     public static class ConsoleUI
     {
-        public static void Clear()
-        {
-            Console.Clear();
-        }
+        public static void Clear() => Console.Clear();
 
         public static void ShowLogo()
         {
@@ -22,9 +19,8 @@ namespace LibraryOS.UI
 |_____|_|_.__/ \___|_|  \__,_|_|   \____/|_____/ 
             ");
             Console.ResetColor();
-            
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("         Console Library Manager");
+            Console.WriteLine("         Console Library Manager  v1.1 (polished)");
             Console.ResetColor();
         }
 
@@ -80,6 +76,9 @@ namespace LibraryOS.UI
             return Console.ReadLine()?.Trim() ?? string.Empty;
         }
 
+        /// <summary>
+        /// FIX: Handles overflow gracefully with a clear message instead of infinite silent loop
+        /// </summary>
         public static int GetIntInput(string prompt)
         {
             while (true)
@@ -87,8 +86,11 @@ namespace LibraryOS.UI
                 string input = GetInput(prompt);
                 if (int.TryParse(input, out int result))
                     return result;
-                
-                ShowError("❌ Invalid number. Please try again.");
+
+                if (long.TryParse(input, out _))
+                    ShowError("❌ Number too large. Please enter a smaller value.");
+                else
+                    ShowError("❌ Invalid number. Please enter digits only (e.g. 1, 42, 100).");
             }
         }
 
@@ -99,8 +101,7 @@ namespace LibraryOS.UI
                 string input = GetInput(prompt);
                 if (decimal.TryParse(input, out decimal result))
                     return result;
-                
-                ShowError("❌ Invalid amount. Please try again.");
+                ShowError("❌ Invalid amount. Enter a number (e.g. 100 or 150.50).");
             }
         }
 
@@ -109,12 +110,9 @@ namespace LibraryOS.UI
             while (true)
             {
                 string input = GetInput($"{prompt} (Y/N)").ToUpper();
-                if (input == "Y" || input == "YES")
-                    return true;
-                if (input == "N" || input == "NO")
-                    return false;
-                
-                ShowError("❌ Please enter Y or N.");
+                if (input == "Y" || input == "YES") return true;
+                if (input == "N" || input == "NO")  return false;
+                ShowError("❌ Please type Y (yes) or N (no).");
             }
         }
 
@@ -122,17 +120,15 @@ namespace LibraryOS.UI
         {
             ShowHeader(title);
             Console.WriteLine();
-            
             for (int i = 0; i < options.Length; i++)
             {
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.Write($"{i + 1}. ");
+                Console.Write($"  {i + 1}. ");
                 Console.ResetColor();
                 Console.WriteLine(options[i]);
             }
-            
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine($"0. Back");
+            Console.WriteLine($"  0. Back / Exit");
             Console.ResetColor();
         }
 
@@ -154,10 +150,10 @@ namespace LibraryOS.UI
         public static void ShowLoading(string message)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"\n{message}");
+            Console.Write($"\n⏳ {message}");
             for (int i = 0; i < 3; i++)
             {
-                Thread.Sleep(300);
+                Thread.Sleep(200);
                 Console.Write(".");
             }
             Console.WriteLine();
